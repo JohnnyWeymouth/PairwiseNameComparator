@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build wheels using cibuildwheel
-        uses: pypa/cibuildwheel@v2.16.2
+        uses: pypa/cibuildwheel@v3.1.2
         env:
           # --- LINUX CONFIG ---
           CIBW_ENVIRONMENT_LINUX: "CFLAGS='-fopenmp' LDFLAGS='-fopenmp'"
