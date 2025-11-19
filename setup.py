@@ -28,15 +28,15 @@ compile_args.append('-O3')
 
 extensions = [
     Extension(
-        "parallel_dict_lookup",
-        ["parallel_dict_lookup.pyx"],
+        "PairwiseNameComparator",
+        ["PairwiseNameComparator.pyx"],
         extra_compile_args=compile_args,
         extra_link_args=link_args,
     )
 ]
 
 setup(
-    name="parallel_dict_lookup",
+    name="PairwiseNameComparator",
     ext_modules=cythonize(
         extensions,
         compiler_directives={
