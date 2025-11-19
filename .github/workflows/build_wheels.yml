@@ -16,14 +16,23 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.2.1
         env:
-          # Install OpenMP on Mac
+          # --- LINUX CONFIG ---
+          # Simple: just use standard GCC OpenMP flag
+          CIBW_ENVIRONMENT_LINUX: "CFLAGS='-fopenmp' LDFLAGS='-fopenmp'"
+
+          # --- WINDOWS CONFIG ---
+          # MSVC uses /openmp
+          CIBW_ENVIRONMENT_WINDOWS: "CFLAGS='/openmp' LDFLAGS=' '"
+
+          # --- MACOS CONFIG ---
+          # 1. Install libomp (the OpenMP library Apple left out)
           CIBW_BEFORE_BUILD_MACOS: brew install libomp
           
-          # Point the compiler to the brew installation
-          # We do NOT add -fopenmp here anymore; setup.py handles it.
+          # 2. The "Preprocessor Trick"
+          # We point to the brew installation and use -Xpreprocessor
           CIBW_ENVIRONMENT_MACOS: >
-            CFLAGS="-I$(brew --prefix libomp)/include $CFLAGS"
-            LDFLAGS="-L$(brew --prefix libomp)/lib -lomp $LDFLAGS"
+            CFLAGS="-Xpreprocessor -fopenmp -I$(brew --prefix libomp)/include"
+            LDFLAGS="-lomp -L$(brew --prefix libomp)/lib"
 
       - uses: actions/upload-artifact@v4
         with:
