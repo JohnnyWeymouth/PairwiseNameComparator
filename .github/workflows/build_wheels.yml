@@ -17,16 +17,15 @@ jobs:
         uses: pypa/cibuildwheel@v3.2.1
         env:
           # --- LINUX & WINDOWS ---
-          # No special flags needed here; setup.py handles the /openmp and -fopenmp switches.
-
+          # No change needed here.
+          
           # --- MACOS CONFIG ---
           # 1. Install libomp
           CIBW_BEFORE_BUILD_MACOS: brew install libomp
           
-          # 2. PATHS ONLY (Crucial!)
-          # We ONLY set the Include (-I) and Library (-L) paths here.
-          # We do NOT set -Xpreprocessor or -fopenmp here (setup.py does that now).
+          # 2. Set the minimum supported OS version and paths
           CIBW_ENVIRONMENT_MACOS: >
+            MACOSX_DEPLOYMENT_TARGET="13.0"
             CFLAGS="-I$(brew --prefix libomp)/include $CFLAGS"
             LDFLAGS="-L$(brew --prefix libomp)/lib $LDFLAGS"
 

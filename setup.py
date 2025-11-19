@@ -1,5 +1,4 @@
 import sys
-import os
 from setuptools import setup, Extension
 from Cython.Build import cythonize
 
@@ -10,7 +9,7 @@ link_args = []
 # 1. Microsoft Visual C++ (Windows)
 if sys.platform.startswith("win"):
     compile_args = ['/openmp']
-    # No link args needed for MSVC usually, but /openmp implies lib linking
+    # No link args needed for MSVC usually
 
 # 2. Apple Clang (macOS)
 elif sys.platform == 'darwin':
