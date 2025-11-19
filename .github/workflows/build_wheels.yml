@@ -1,10 +1,10 @@
 name: Build and Publish Wheels
 
-# Trigger the workflow on pushes to main/master (for CI testing)
-# AND when a version tag is pushed (for releases)
+# Trigger the workflow ONLY when a version tag is pushed
 on:
   push:
-    branches: [main, master]
+    tags:
+      - 'v*'
 
 jobs:
   # ----------------------------------------------------------------------
@@ -12,7 +12,6 @@ jobs:
   # ----------------------------------------------------------------------
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
-    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ${{ matrix.os }}
     strategy:
       # Ensure all platforms build, even if one fails (optional but safe)
@@ -25,7 +24,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build wheels using cibuildwheel
-        uses: pypa/cibuildwheel@v3.1.2
+        uses: pypa/cibuildwheel@v3.2.1
         env:
           # --- LINUX CONFIG ---
           CIBW_ENVIRONMENT_LINUX: "CFLAGS='-fopenmp' LDFLAGS='-fopenmp'"
@@ -52,7 +51,7 @@ jobs:
   # ----------------------------------------------------------------------
   publish-to-pypi:
     name: Publish Python 🐍 distribution 📦 to PyPI
-    # Only run this job if all matrix builds succeeded AND a version tag was pushed
+    # Only run this job if all matrix builds succeeded
     needs: [build_wheels]
     runs-on: ubuntu-latest
     environment:
@@ -62,7 +61,10 @@ jobs:
       id-token: write
 
     steps:
-      # Download the source distribution package (sdist)
+      # Checkout to get the source for building sdist
+      - uses: actions/checkout@v4
+
+      # Build the source distribution
       - name: Build Source Distribution
         run: python3 -m pip install build && python3 -m build --sdist
 
