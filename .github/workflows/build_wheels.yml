@@ -18,10 +18,13 @@ jobs:
         env:
           # macOS requires explicit installation of libomp
           CIBW_BEFORE_BUILD_MACOS: brew install libomp
-          # Tell the compiler where to find libomp on Mac
+          # Tell the compiler where to find libomp on Mac and use -Xclang flags
           CIBW_ENVIRONMENT_MACOS: >
-            CFLAGS="-I$(brew --prefix libomp)/include $CFLAGS"
-            LDFLAGS="-L$(brew --prefix libomp)/lib -lomp $LDFLAGS"
+            CC=clang
+            CXX=clang++
+            CFLAGS="-Xclang -fopenmp -I$(brew --prefix libomp)/include"
+            CXXFLAGS="-Xclang -fopenmp -I$(brew --prefix libomp)/include"
+            LDFLAGS="-L$(brew --prefix libomp)/lib -lomp"
 
       - uses: actions/upload-artifact@v4
         with:
