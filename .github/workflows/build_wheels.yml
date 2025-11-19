@@ -1,35 +1,89 @@
-name: Build and Upload Wheels
+name: Build and Publish Wheels
 
-on: [push, pull_request]
+# Trigger the workflow on pushes to main/master (for CI testing)
+# AND when a version tag is pushed (for releases)
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+*']
+    branches: [main, master]
 
 jobs:
+  # ----------------------------------------------------------------------
+  # 1. BUILD JOB: Creates the platform-specific wheels
+  # ----------------------------------------------------------------------
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
+      # Ensure all platforms build, even if one fails (optional but safe)
+      fail-fast: false
       matrix:
+        # We need three runners to cover all major targets
         os: [ubuntu-latest, windows-latest, macos-13]
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build wheels
-        uses: pypa/cibuildwheel@v3.2.1
+      - name: Build wheels using cibuildwheel
+        uses: pypa/cibuildwheel@v2.16.2
         env:
-          # --- LINUX & WINDOWS ---
-          # No change needed here.
-          
-          # --- MACOS CONFIG ---
-          # 1. Install libomp
+          # --- LINUX CONFIG ---
+          CIBW_ENVIRONMENT_LINUX: "CFLAGS='-fopenmp' LDFLAGS='-fopenmp'"
+
+          # --- WINDOWS CONFIG (MSVC) ---
+          CIBW_ENVIRONMENT_WINDOWS: "CFLAGS='/openmp' LDFLAGS=' '"
+
+          # --- MACOS CONFIG (Fixes for libomp and deployment target) ---
           CIBW_BEFORE_BUILD_MACOS: brew install libomp
-          
-          # 2. Set the minimum supported OS version and paths
           CIBW_ENVIRONMENT_MACOS: >
             MACOSX_DEPLOYMENT_TARGET="13.0"
             CFLAGS="-I$(brew --prefix libomp)/include $CFLAGS"
             LDFLAGS="-L$(brew --prefix libomp)/lib $LDFLAGS"
-
+        
+      # Upload the artifacts so the final job can download them
       - uses: actions/upload-artifact@v4
         with:
-          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          # The pattern must match the download step later
+          name: cibw-wheels-${{ matrix.os }}
           path: ./wheelhouse/*.whl
+
+  # ----------------------------------------------------------------------
+  # 2. PUBLISH JOB: Collects wheels and publishes to PyPI
+  # ----------------------------------------------------------------------
+  publish-to-pypi:
+    name: Publish Python 🐍 distribution 📦 to PyPI
+    # Only run this job if all matrix builds succeeded AND a version tag was pushed
+    if: success() && startsWith(github.ref, 'refs/tags/v')
+    needs: [build_wheels]
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/PairwiseNameComparator
+    permissions:
+      id-token: write
+
+    steps:
+      # Download the source distribution package (sdist)
+      - name: Build Source Distribution
+        run: python3 -m pip install build && python3 -m build --sdist
+
+      # Download all platform-specific wheels from the artifact storage
+      - name: Download all wheels
+        uses: actions/download-artifact@v4
+        with:
+          pattern: cibw-wheels-*
+          path: dist_wheels
+          
+      # Move all wheels into the standard 'dist' folder alongside the sdist
+      - name: Combine distributions
+        run: mv dist_wheels/**/*.whl dist/ || true
+
+      - name: Verify distributions exist
+        run: ls -l dist/
+
+      # Publish using the official PyPA action
+      - name: Publish distribution 📦 to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          username: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
