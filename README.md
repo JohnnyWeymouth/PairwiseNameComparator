@@ -1,0 +1,1 @@
+An efficient Python package for all-to-all comparisons of large datasets of names
