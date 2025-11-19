@@ -1,21 +1,38 @@
+import sys
 import os
 from setuptools import setup, Extension
 from Cython.Build import cythonize
 
-# Read flags from the environment (set by cibuildwheel)
-# If they aren't set, default to empty list
-extra_compile_args = os.environ.get('CFLAGS', '').split()
-extra_link_args = os.environ.get('LDFLAGS', '').split()
+# Default flags
+compile_args = []
+link_args = []
 
-# Add optimization flag by default
-extra_compile_args.append('-O3')
+# 1. Microsoft Visual C++ (Windows)
+if sys.platform.startswith("win"):
+    compile_args = ['/openmp']
+    # No link args needed for MSVC usually, but /openmp implies lib linking
+
+# 2. Apple Clang (macOS)
+elif sys.platform == 'darwin':
+    # These MUST be in this specific order
+    compile_args = ['-Xpreprocessor', '-fopenmp']
+    # Link against the OpenMP library
+    link_args = ['-lomp']
+
+# 3. GCC/Linux
+else:
+    compile_args = ['-fopenmp']
+    link_args = ['-fopenmp']
+
+# Always add optimization
+compile_args.append('-O3')
 
 extensions = [
     Extension(
         "parallel_dict_lookup",
         ["parallel_dict_lookup.pyx"],
-        extra_compile_args=extra_compile_args,
-        extra_link_args=extra_link_args,
+        extra_compile_args=compile_args,
+        extra_link_args=link_args,
     )
 ]
 
