@@ -1,19 +1,27 @@
 import sys
+import os
 from setuptools import setup, Extension
 from Cython.Build import cythonize
 
-# Detect OS to set correct OpenMP flags
+# 1. Standard OpenMP flags for Windows/Linux
 if sys.platform.startswith("win"):
-    openmp_arg = '/openmp'
+    compile_args = ['/openmp']
+    link_args = []
+elif sys.platform == 'darwin':
+    # 2. macOS (Apple Clang) requires these specific flags
+    compile_args = ['-Xpreprocessor', '-fopenmp']
+    link_args = ['-lomp']
 else:
-    openmp_arg = '-fopenmp'
+    # 3. Linux (GCC)
+    compile_args = ['-fopenmp']
+    link_args = ['-fopenmp']
 
 extensions = [
     Extension(
         "parallel_dict_lookup",
         ["parallel_dict_lookup.pyx"],
-        extra_compile_args=[openmp_arg, '-O3'],
-        extra_link_args=[openmp_arg],
+        extra_compile_args=compile_args + ['-O3'],
+        extra_link_args=link_args,
     )
 ]
 

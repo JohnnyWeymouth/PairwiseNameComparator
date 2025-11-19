@@ -16,15 +16,14 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.2.1
         env:
-          # macOS requires explicit installation of libomp
+          # Install OpenMP on Mac
           CIBW_BEFORE_BUILD_MACOS: brew install libomp
-          # Tell the compiler where to find libomp on Mac and use -Xclang flags
+          
+          # Point the compiler to the brew installation
+          # We do NOT add -fopenmp here anymore; setup.py handles it.
           CIBW_ENVIRONMENT_MACOS: >
-            CC=clang
-            CXX=clang++
-            CFLAGS="-Xclang -fopenmp -I$(brew --prefix libomp)/include"
-            CXXFLAGS="-Xclang -fopenmp -I$(brew --prefix libomp)/include"
-            LDFLAGS="-L$(brew --prefix libomp)/lib -lomp"
+            CFLAGS="-I$(brew --prefix libomp)/include $CFLAGS"
+            LDFLAGS="-L$(brew --prefix libomp)/lib -lomp $LDFLAGS"
 
       - uses: actions/upload-artifact@v4
         with:
