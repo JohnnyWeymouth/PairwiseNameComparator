@@ -1,48 +1,89 @@
-import sys
-from setuptools import setup, Extension
-from Cython.Build import cythonize
+import platform
+from pathlib import Path
+from setuptools import setup
+from setuptools.command.build_py import build_py
 
-# Default flags
-compile_args = []
-link_args = []
+class BuildWithBinaries(build_py):
+    """Custom build command to include Go binaries"""
+    def run(self):
+        # Run the standard build
+        build_py.run(self)
+        
+        # Copy binaries to the build directory
+        if not self.dry_run:
+            binary_dir = Path("binaries")
+            if binary_dir.exists():
+                target_dir = Path(self.build_lib) / "pairwise_name_comparator" / "bin"
+                target_dir.mkdir(parents=True, exist_ok=True)
+                
+                for binary in binary_dir.glob("*"):
+                    if binary.is_file():
+                        self.copy_file(str(binary), str(target_dir / binary.name))
 
-# 1. Microsoft Visual C++ (Windows)
-if sys.platform.startswith("win"):
-    compile_args = ['/openmp']
-    # No link args needed for MSVC usually
+def get_binary_name():
+    """Determine which binary to use based on platform"""
+    system = platform.system().lower()
+    machine = platform.machine().lower()
+    
+    # Normalize architecture names
+    if machine in ('x86_64', 'amd64'):
+        arch = 'amd64'
+    elif machine in ('aarch64', 'arm64'):
+        arch = 'arm64'
+    else:
+        arch = machine
+    
+    if system == 'windows':
+        return f"PairwiseNameComparator.exe"
+    else:
+        return f"PairwiseNameComparator"
 
-# 2. Apple Clang (macOS)
-elif sys.platform == 'darwin':
-    # These MUST be in this specific order
-    compile_args = ['-Xpreprocessor', '-fopenmp']
-    # Link against the OpenMP library
-    link_args = ['-lomp']
+# Read version from a version file or set it directly
+VERSION = "0.1.0"
 
-# 3. GCC/Linux
-else:
-    compile_args = ['-fopenmp']
-    link_args = ['-fopenmp']
-
-# Always add optimization
-compile_args.append('-O3')
-
-extensions = [
-    Extension(
-        "PairwiseNameComparator",
-        ["PairwiseNameComparator.pyx"],
-        extra_compile_args=compile_args,
-        extra_link_args=link_args,
-    )
-]
+# Read long description from README
+long_description = ""
+readme_path = Path("README.md")
+if readme_path.exists():
+    long_description = readme_path.read_text(encoding="utf-8")
 
 setup(
     name="PairwiseNameComparator",
-    ext_modules=cythonize(
-        extensions,
-        compiler_directives={
-            'language_level': "3",
-            'boundscheck': False,
-            'wraparound': False,
-        }
-    ),
+    version=VERSION,
+    description="An efficient Python package for all-to-all comparisons of large datasets of names",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    author="Your Name",
+    author_email="your.email@example.com",
+    url="https://github.com/yourusername/PairwiseNameComparator",
+    packages=["src"],
+    python_requires=">=3.8",
+    install_requires=[
+        "rich>=10.0.0",
+        "Unidecode>=1.2.0",
+        "fuzzywuzzy>=0.18.0",
+        "python-Levenshtein>=0.25.1",
+        "HungarianScorer==1.0.2",
+        "RapidFuzz>=3.0.0",
+    ],
+    # Include the binaries directory in the package
+    package_data={
+        "pairwise_name_comparator": ["bin/*"],
+    },
+    include_package_data=True,
+    cmdclass={
+        'build_py': BuildWithBinaries,
+    },
+    classifiers=[
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Go",
+    ],
 )

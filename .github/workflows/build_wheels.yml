@@ -1,90 +1,135 @@
-name: Build and Publish Wheels
+name: Build and Package
 
-# Trigger the workflow ONLY when a version tag is pushed
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ created ]
 
 jobs:
-  # ----------------------------------------------------------------------
-  # 1. BUILD JOB: Creates the platform-specific wheels
-  # ----------------------------------------------------------------------
-  build_wheels:
-    name: Build wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+  build-go-binaries:
+    name: Build Go Binary for ${{ matrix.os }}-${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
     strategy:
-      # Ensure all platforms build, even if one fails (optional but safe)
-      fail-fast: false
       matrix:
-        # We need three runners to cover all major targets
-        os: [ubuntu-latest, windows-latest, macos-13]
-
+        include:
+          - os: linux
+            arch: amd64
+            runner: ubuntu-latest
+            binary: PairwiseNameComparator
+          - os: linux
+            arch: arm64
+            runner: ubuntu-latest
+            binary: PairwiseNameComparator
+          - os: darwin
+            arch: amd64
+            runner: macos-latest
+            binary: PairwiseNameComparator
+          - os: darwin
+            arch: arm64
+            runner: macos-latest
+            binary: PairwiseNameComparator
+          - os: windows
+            arch: amd64
+            runner: windows-latest
+            binary: PairwiseNameComparator.exe
+    
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.25'
+    
+    - name: Build Go Binary
+      env:
+        GOOS: ${{ matrix.os }}
+        GOARCH: ${{ matrix.arch }}
+        CGO_ENABLED: 0
+      run: |
+        go build -o ${{ matrix.binary }} -ldflags="-s -w" main.go
+    
+    - name: Upload Binary Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: binary-${{ matrix.os }}-${{ matrix.arch }}
+        path: ${{ matrix.binary }}
+        retention-days: 7
 
-      - name: Build wheels using cibuildwheel
-        uses: pypa/cibuildwheel@v3.2.1
-        env:
-          # --- LINUX CONFIG ---
-          CIBW_ENVIRONMENT_LINUX: "CFLAGS='-fopenmp' LDFLAGS='-fopenmp'"
+  build-wheels:
+    name: Build Wheel for ${{ matrix.os }}
+    needs: build-go-binaries
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+          - os: linux
+            runner: ubuntu-latest
+            artifact-pattern: binary-linux-*
+          - os: macos
+            runner: macos-latest
+            artifact-pattern: binary-darwin-*
+          - os: windows
+            runner: windows-latest
+            artifact-pattern: binary-windows-*
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Download Go Binaries
+      uses: actions/download-artifact@v4
+      with:
+        pattern: ${{ matrix.artifact-pattern }}
+        path: binaries/
+        merge-multiple: true
+    
+    - name: List downloaded binaries (Debug)
+      run: |
+        ls -R binaries/
+    
+    - name: Install build dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build wheel setuptools
+    
+    - name: Build wheel
+      run: python -m build --wheel
+    
+    - name: Upload Wheel
+      uses: actions/upload-artifact@v4
+      with:
+        name: wheel-${{ matrix.os }}
+        path: dist/*.whl
+        retention-days: 7
 
-          # --- WINDOWS CONFIG (MSVC) ---
-          CIBW_ENVIRONMENT_WINDOWS: "CFLAGS='/openmp' LDFLAGS=' '"
-
-          # --- MACOS CONFIG (Fixes for libomp and deployment target) ---
-          CIBW_BEFORE_BUILD_MACOS: brew install libomp
-          CIBW_ENVIRONMENT_MACOS: >
-            MACOSX_DEPLOYMENT_TARGET="13.0"
-            CFLAGS="-I$(brew --prefix libomp)/include $CFLAGS"
-            LDFLAGS="-L$(brew --prefix libomp)/lib $LDFLAGS"
-        
-      # Upload the artifacts so the final job can download them
-      - uses: actions/upload-artifact@v4
-        with:
-          # The pattern must match the download step later
-          name: cibw-wheels-${{ matrix.os }}
-          path: ./wheelhouse/*.whl
-
-  # ----------------------------------------------------------------------
-  # 2. PUBLISH JOB: Collects wheels and publishes to PyPI
-  # ----------------------------------------------------------------------
-  publish-to-pypi:
-    name: Publish Python 🐍 distribution 📦 to PyPI
-    # Only run this job if all matrix builds succeeded
-    needs: [build_wheels]
+  publish:
+    name: Publish to PyPI
+    needs: build-wheels
     runs-on: ubuntu-latest
+    if: github.event_name == 'release'
     environment:
       name: pypi
       url: https://pypi.org/p/PairwiseNameComparator
     permissions:
       id-token: write
-
+    
     steps:
-      # Checkout to get the source for building sdist
-      - uses: actions/checkout@v4
-
-      # Build the source distribution
-      - name: Build Source Distribution
-        run: python3 -m pip install build && python3 -m build --sdist
-
-      # Download all platform-specific wheels from the artifact storage
-      - name: Download all wheels
-        uses: actions/download-artifact@v4
-        with:
-          pattern: cibw-wheels-*
-          path: dist_wheels
-          
-      # Move all wheels into the standard 'dist' folder alongside the sdist
-      - name: Combine distributions
-        run: mv dist_wheels/**/*.whl dist/ || true
-
-      - name: Verify distributions exist
-        run: ls -l dist/
-
-      # Publish using the official PyPA action
-      - name: Publish distribution 📦 to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          username: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
+    - name: Download all wheels
+      uses: actions/download-artifact@v4
+      with:
+        pattern: wheel-*
+        path: dist/
+        merge-multiple: true
+    - name: Publish distribution 📦 to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        username: __token__
+        password: ${{ secrets.PYPI_API_TOKEN }}

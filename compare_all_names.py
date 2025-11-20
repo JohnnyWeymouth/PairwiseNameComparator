@@ -4,6 +4,7 @@ import ast
 import json
 import random
 import subprocess
+import platform
 from pathlib import Path
 from typing import Callable
 
@@ -39,11 +40,23 @@ def compare_all_names(all_names: list[str], word_to_matches: dict[str, frozenset
     # Create raw output file (has results, but could contain dups)
     raw_output_filepath = create_tempdir_file()
 
+    # Get the binary path
+    binary_path = _get_binary_path()
+
     # Call Go program
     import time
     start = time.perf_counter()
-    subprocess.run(["./PairwiseNameComparator.exe", str(json_filepath), str(raw_output_filepath)])
-    print(time.perf_counter() - start)
+    result = subprocess.run(
+        [str(binary_path), str(json_filepath), str(raw_output_filepath)],
+        capture_output=True,
+        text=True
+    )
+    
+    if result.returncode != 0:
+        print(f"Go binary error: {result.stderr}")
+        raise RuntimeError(f"Go binary failed with return code {result.returncode}")
+    
+    print(f"Processing time: {time.perf_counter() - start:.2f}s")
 
     # Remove duplicates
     output_filepath = remove_duplicates_external_sort(raw_output_filepath)
@@ -99,7 +112,7 @@ def add_scrutiny(original_filepath: Path, scoring_func: Callable[[str, str], flo
     """Reads the original file line by line, applies a scoring function to each line, and writes the lines that pass the threshold to a new file.
 
     Args:
-        input_filepath: The path to the file to be read
+        original_filepath: The path to the file to be read
         scoring_func: A callable that takes two names as input and returns the score for that name comparison
         threshold: the threshold that each line must score in order to be included within the filtered
 
@@ -119,7 +132,39 @@ def add_scrutiny(original_filepath: Path, scoring_func: Callable[[str, str], flo
     return filtered_filepath
 
 
-if __name__ == '__main__':
-    from data.small_data_set import data_set_names
-    output_file = compare_all_names(data_set_names)
-    final_output = add_scrutiny(output_file)
+def _get_binary_path() -> Path:
+    """
+    Locate the PairwiseNameComparator binary.
+    Searches in order:
+    1. Current directory (for development)
+    2. Package installation directory
+    3. PATH
+    """
+    system = platform.system().lower()
+    binary_name = "PairwiseNameComparator.exe" if system == "windows" else "PairwiseNameComparator"
+    
+    # 1. Check current directory (development)
+    local_binary = Path.cwd() / binary_name
+    if local_binary.exists():
+        return local_binary
+    
+    # 2. Check package installation directory
+    try:
+        import src
+        package_dir = Path(src.__file__).parent
+        installed_binary = package_dir / "bin" / binary_name
+        if installed_binary.exists():
+            return installed_binary
+    except (ImportError, AttributeError):
+        pass
+    
+    # 3. Check if it's in PATH
+    import shutil
+    path_binary = shutil.which(binary_name)
+    if path_binary:
+        return Path(path_binary)
+    
+    raise FileNotFoundError(
+        f"Could not find {binary_name}. Please ensure the package is properly installed "
+        "or the binary is in your current directory."
+    )

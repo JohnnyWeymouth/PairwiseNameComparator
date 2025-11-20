@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools", "wheel", "Cython>=3.0.0"]
+requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,5 +7,19 @@ name = "PairwiseNameComparator"
 version = "0.1.0"
 description = "An efficient Python package for all-to-all comparisons of large datasets of names"
 readme = "README.md"
+license = { file = "LICENSE" }
 requires-python = ">=3.8"
-dependencies = []
+dependencies = [
+    "rich>=10.0.0",
+    "Unidecode>=1.2.0",
+    "fuzzywuzzy>=0.18.0",
+    "python-Levenshtein>=0.25.1",
+    "HungarianScorer==1.0.2",
+    "RapidFuzz>=3.0.0"
+]
+
+[tool.setuptools]
+packages = ["src"]
+
+[tool.setuptools.package-data]
+src = ["bin/*"]
