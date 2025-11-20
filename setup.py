@@ -39,7 +39,7 @@ def get_binary_name():
         return f"PairwiseNameComparator"
 
 # Read version from a version file or set it directly
-VERSION = "0.1.0"
+VERSION = "0.1.4"
 
 # Read long description from README
 long_description = ""
