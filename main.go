@@ -252,7 +252,7 @@ func processBatch(
 				currentGen += 2
 				
 				if validateOptimized(ids1, ids2, data.WordToMatches, matchesBuffer, currentGen) {
-					matchStr := fmt.Sprintf("('%s', '%s')", n1, n2)
+					matchStr := fmt.Sprintf("(\"%s\", \"%s\")", n1, n2)
 					if _, seen := seenMatches[matchStr]; !seen {
 						seenMatches[matchStr] = struct{}{}
 						writer.WriteString(matchStr + "\n")
