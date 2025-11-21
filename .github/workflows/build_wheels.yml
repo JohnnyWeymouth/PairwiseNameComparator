@@ -131,7 +131,7 @@ jobs:
     if: github.event_name == 'release'
     environment:
       name: pypi
-      url: https://pypi.org/p/pairwisenamecomparator
+      url: https://pypi.org/p/PairwiseNameComparator
     permissions:
       id-token: write
     

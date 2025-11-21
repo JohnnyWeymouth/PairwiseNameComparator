@@ -3,7 +3,5 @@ include LICENSE
 include pyproject.toml
 include go.mod
 include main.go
-# Ensure the package directory is included
-graft pairwisenamecomparator
-# Exclude byte-compiled files
+graft PairwiseNameComparator
 global-exclude *.py[cod]

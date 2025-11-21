@@ -10,7 +10,6 @@ class BuildWithBinaries(build_py):
         if not self.dry_run:
             binary_dir = Path("binaries")
             # We use self.get_package_dir to find where setuptools put the package
-            # This avoids hardcoding "pairwisenamecomparator" if the detection varies
             pkg_name = self.distribution.packages[0]
             target_dir = Path(self.build_lib) / pkg_name / "bin"
             
