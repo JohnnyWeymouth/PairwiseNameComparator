@@ -10,11 +10,11 @@ from typing import Callable
 
 from rich.progress import track
 
-from PairwiseNameComparator.src.clean import clean_name
-from PairwiseNameComparator.src.word_to_matches import get_word_to_matches
-from PairwiseNameComparator.src.pair_to_names import build_simple_pair_mappings
-from PairwiseNameComparator.src.file_management import create_tempdir_file, remove_duplicates_external_sort
-from PairwiseNameComparator.src.find_which import find_which_words_match_and_how_well
+from .clean import clean_name
+from .word_to_matches import get_word_to_matches
+from .pair_to_names import build_simple_pair_mappings
+from .file_management import create_tempdir_file, remove_duplicates_external_sort
+from .find_which import find_which_words_match_and_how_well
 
 
 def compare_all_names(all_names: list[str], word_to_matches: dict[str, frozenset[str]] | None = None) -> Path:
@@ -150,8 +150,7 @@ def _get_binary_path() -> Path:
     
     # 2. Check package installation directory
     try:
-        import src
-        package_dir = Path(src.__file__).parent
+        package_dir = Path(__file__).parent
         installed_binary = package_dir / "bin" / binary_name
         if installed_binary.exists():
             return installed_binary

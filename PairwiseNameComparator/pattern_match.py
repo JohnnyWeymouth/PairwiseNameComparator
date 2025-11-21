@@ -7,7 +7,7 @@ from itertools import product, combinations
 from rich.progress import track
 from rapidfuzz import fuzz
 
-from PairwiseNameComparator.src.patterns import SandwichPattern
+from .patterns import SandwichPattern
 
 
 class _RegexTup(NamedTuple):

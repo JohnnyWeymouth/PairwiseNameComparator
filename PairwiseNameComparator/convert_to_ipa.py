@@ -2,8 +2,8 @@ from functools import lru_cache
 
 from unidecode import unidecode
 
-from PairwiseNameComparator.src.ipaAllNames import data as ipaAllNames
-from PairwiseNameComparator.src.ipaCommonWordParts import data as ipaCommonWordParts
+from .ipaAllNames import data as ipaAllNames
+from .ipaCommonWordParts import data as ipaCommonWordParts
 
 
 @lru_cache(50_000)

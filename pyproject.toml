@@ -4,11 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pairwisenamecomparator"
-version = "0.1.6"
 description = "An efficient Python package for all-to-all comparisons of large datasets of names"
 readme = "README.md"
-license = { file = "LICENSE" }
+license = {text = "MIT"}
 requires-python = ">=3.8"
+authors = [
+    {name = "Johnny Weymouth"}
+]
 dependencies = [
     "rich>=10.0.0",
     "Unidecode>=1.2.0",
@@ -17,9 +19,26 @@ dependencies = [
     "HungarianScorer==1.0.2",
     "RapidFuzz>=3.0.0"
 ]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Go",
+]
+
+[project.urls]
+Homepage = "https://github.com/JohnnyWeymouth/PairwiseNameComparator"
+Repository = "https://github.com/JohnnyWeymouth/PairwiseNameComparator"
+Issues = "https://github.com/JohnnyWeymouth/PairwiseNameComparator/issues"
 
 [tool.setuptools]
-packages = ["src"]
+packages = ["pairwisenamecomparator"]
 
-[tool.setuptools.package-data]
-src = ["bin/*"]
+[tool.setuptools.dynamic]
+version = {attr = "pairwisenamecomparator.__version__"}

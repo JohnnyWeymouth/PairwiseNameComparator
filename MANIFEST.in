@@ -1,6 +1,9 @@
 include README.md
 include LICENSE
-recursive-include binaries *
-recursive-include pairwisenamecomparator *.py
-global-exclude __pycache__
-global-exclude *.py[co]
+include pyproject.toml
+include go.mod
+include main.go
+# Ensure the package directory is included
+graft pairwisenamecomparator
+# Exclude byte-compiled files
+global-exclude *.py[cod]
