@@ -62,12 +62,12 @@ jobs:
     strategy:
       matrix:
         include:
-          - platform: manylinux_2_17_x86_64.manylinux2014_x86_64
+          - platform: manylinux_2_17_x86_64
             runner: ubuntu-latest
             os: linux
             arch: amd64
             binary: PairwiseNameComparator
-          - platform: manylinux_2_17_aarch64.manylinux2014_aarch64
+          - platform: manylinux_2_17_aarch64
             runner: ubuntu-latest
             os: linux
             arch: arm64
