@@ -10,11 +10,11 @@ from typing import Callable
 
 from rich.progress import track
 
-from src.clean import clean_name
-from src.word_to_matches import get_word_to_matches
-from src.pair_to_names import build_simple_pair_mappings
-from src.file_management import create_tempdir_file, remove_duplicates_external_sort
-from src.find_which import find_which_words_match_and_how_well
+from PairwiseNameComparator.src.clean import clean_name
+from PairwiseNameComparator.src.word_to_matches import get_word_to_matches
+from PairwiseNameComparator.src.pair_to_names import build_simple_pair_mappings
+from PairwiseNameComparator.src.file_management import create_tempdir_file, remove_duplicates_external_sort
+from PairwiseNameComparator.src.find_which import find_which_words_match_and_how_well
 
 
 def compare_all_names(all_names: list[str], word_to_matches: dict[str, frozenset[str]] | None = None) -> Path:

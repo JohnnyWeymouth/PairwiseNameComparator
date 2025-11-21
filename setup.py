@@ -15,7 +15,7 @@ class BuildWithBinaries(build_py):
         if not self.dry_run:
             binary_dir = Path("binaries")
             if binary_dir.exists():
-                target_dir = Path(self.build_lib) / "src" / "bin"
+                target_dir = Path(self.build_lib) / "pairwisenamecomparator" / "bin"
                 target_dir.mkdir(parents=True, exist_ok=True)
                 
                 for binary in binary_dir.glob("*"):
@@ -57,7 +57,7 @@ def get_binary_name():
         return f"PairwiseNameComparator"
 
 # Read version from a version file or set it directly
-VERSION = "0.1.5"
+VERSION = "0.1.6"
 
 # Read long description from README
 long_description = ""

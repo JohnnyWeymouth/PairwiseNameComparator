@@ -1,6 +1,6 @@
 include README.md
 include LICENSE
 recursive-include binaries *
-recursive-include src *.py
+recursive-include pairwisenamecomparator *.py
 global-exclude __pycache__
 global-exclude *.py[co]

@@ -1,10 +1,10 @@
 from rich.progress import track
 from rapidfuzz import fuzz
 
-from src.nicknames import get_nickname_set
-from src.patterns import SPELLING_PATTERNS, IPA_PATTERNS
-from src.pattern_match import pattern_match
-from src.convert_to_ipa import get_ipa_of_one_word
+from PairwiseNameComparator.src.nicknames import get_nickname_set
+from PairwiseNameComparator.src.patterns import SPELLING_PATTERNS, IPA_PATTERNS
+from PairwiseNameComparator.src.pattern_match import pattern_match
+from PairwiseNameComparator.src.convert_to_ipa import get_ipa_of_one_word
 
 
 def get_word_to_matches(all_names: list[str]) -> dict[str, frozenset[str]]:
