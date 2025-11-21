@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pairwisenamecomparator"
+license = "MIT"
 version = "0.1.6"
 description = "An efficient Python package for all-to-all comparisons of large datasets of names"
 readme = "README.md"
-license = {file = "LICENSE"}
 requires-python = ">=3.8"
 authors = [
     {name = "Johnny Weymouth"}
@@ -30,12 +30,10 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Go",
+    "License :: OSI Approved :: MIT License",
 ]
 
 [project.urls]
 Homepage = "https://github.com/JohnnyWeymouth/PairwiseNameComparator"
 Repository = "https://github.com/JohnnyWeymouth/PairwiseNameComparator"
 Issues = "https://github.com/JohnnyWeymouth/PairwiseNameComparator/issues"
-
-[tool.setuptools]
-packages = ["pairwisenamecomparator"]
