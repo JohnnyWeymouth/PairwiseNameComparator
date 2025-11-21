@@ -66,7 +66,7 @@ if readme_path.exists():
     long_description = readme_path.read_text(encoding="utf-8")
 
 setup(
-    name="PairwiseNameComparator",
+    name="pairwisenamecomparator",
     version=VERSION,
     description="An efficient Python package for all-to-all comparisons of large datasets of names",
     long_description=long_description,
@@ -91,6 +91,7 @@ setup(
     include_package_data=True,
     cmdclass={
         'build_py': BuildWithBinaries,
+        'bdist_wheel': BdistWheelPlatSpecific,
     },
     classifiers=[
         "Development Status :: 3 - Alpha",
