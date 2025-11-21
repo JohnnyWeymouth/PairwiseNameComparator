@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=45", "wheel>=0.37.0"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,7 +7,7 @@ name = "pairwisenamecomparator"
 version = "0.1.6"
 description = "An efficient Python package for all-to-all comparisons of large datasets of names"
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
 requires-python = ">=3.8"
 authors = [
     {name = "Johnny Weymouth"}
@@ -23,7 +23,6 @@ dependencies = [
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
