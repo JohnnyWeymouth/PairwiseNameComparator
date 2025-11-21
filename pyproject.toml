@@ -4,6 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pairwisenamecomparator"
+version = "dynamic"
 description = "An efficient Python package for all-to-all comparisons of large datasets of names"
 readme = "README.md"
 license = {text = "MIT"}
