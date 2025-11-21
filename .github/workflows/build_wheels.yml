@@ -1,10 +1,6 @@
 name: Build and Package
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
   release:
     types: [ created ]
 
@@ -60,21 +56,37 @@ jobs:
         retention-days: 7
 
   build-wheels:
-    name: Build Wheel for ${{ matrix.os }}
+    name: Build Wheel for ${{ matrix.platform }}
     needs: build-go-binaries
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
         include:
-          - os: linux
+          - platform: manylinux_2_17_x86_64.manylinux2014_x86_64
             runner: ubuntu-latest
-            artifact-pattern: binary-linux-*
-          - os: macos
+            os: linux
+            arch: amd64
+            binary: PairwiseNameComparator
+          - platform: manylinux_2_17_aarch64.manylinux2014_aarch64
+            runner: ubuntu-latest
+            os: linux
+            arch: arm64
+            binary: PairwiseNameComparator
+          - platform: macosx_10_9_x86_64
             runner: macos-latest
-            artifact-pattern: binary-darwin-*
-          - os: windows
+            os: darwin
+            arch: amd64
+            binary: PairwiseNameComparator
+          - platform: macosx_11_0_arm64
+            runner: macos-latest
+            os: darwin
+            arch: arm64
+            binary: PairwiseNameComparator
+          - platform: win_amd64
             runner: windows-latest
-            artifact-pattern: binary-windows-*
+            os: windows
+            arch: amd64
+            binary: PairwiseNameComparator.exe
     
     steps:
     - uses: actions/checkout@v4
@@ -84,29 +96,31 @@ jobs:
       with:
         python-version: '3.11'
     
-    - name: Download Go Binaries
+    - name: Download Go Binary
       uses: actions/download-artifact@v4
       with:
-        pattern: ${{ matrix.artifact-pattern }}
+        name: binary-${{ matrix.os }}-${{ matrix.arch }}
         path: binaries/
-        merge-multiple: true
     
     - name: List downloaded binaries (Debug)
+      shell: bash
       run: |
         ls -R binaries/
     
     - name: Install build dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install build wheel setuptools
+        pip install wheel setuptools
     
-    - name: Build wheel
-      run: python -m build --wheel
+    - name: Build platform-specific wheel
+      shell: bash
+      run: |
+        python setup.py bdist_wheel --plat-name ${{ matrix.platform }}
     
     - name: Upload Wheel
       uses: actions/upload-artifact@v4
       with:
-        name: wheel-${{ matrix.os }}
+        name: wheel-${{ matrix.platform }}
         path: dist/*.whl
         retention-days: 7
 
@@ -117,7 +131,7 @@ jobs:
     if: github.event_name == 'release'
     environment:
       name: pypi
-      url: https://pypi.org/p/PairwiseNameComparator
+      url: https://pypi.org/p/pairwisenamecomparator
     permissions:
       id-token: write
     
@@ -128,6 +142,10 @@ jobs:
         pattern: wheel-*
         path: dist/
         merge-multiple: true
+    
+    - name: List wheels to upload
+      run: ls -lh dist/
+
     - name: Publish distribution 📦 to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
